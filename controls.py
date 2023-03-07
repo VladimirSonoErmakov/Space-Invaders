@@ -38,16 +38,29 @@ def update_bullets(bullets):
             bullets.remove(bullet)
     # print(len(bullets)) #проверяем что улетевщие за предел экрана пульки не жрут память
 
+
+def update_inos(inos):
+    """обновление позицию пришельцев"""
+    inos.update()
+    
+
 def create_army(screen, inos):
     """создаеь армию пришельцев"""
     ino = Ino(screen)
     ino_width = ino.rect.width
     number_ino_x = int((700 - 2 * ino_width) / ino_width)
+    ino_height = ino.rect.height
+    number_ino_y = int((800 - 100 -  2 * ino_height) / ino_height)
     
-    for ino_number in range(number_ino_x):
-        ino = Ino(screen)
-        ino.x = ino_width + ino_width * ino_number
-        ino.rect.x = ino.x
-        
+    for row_number in range(number_ino_y - 5): 
+        for ino_number in range(number_ino_x):
+            ino = Ino(screen)
+            ino.x = ino_width + ino_width * ino_number
+            ino.y = ino_height + ino_height * row_number
+            ino.rect.x = ino.x
+            ino.rect.y = ino.rect.height + 1 *ino.rect.height * row_number
+            
+            
+            inos.add(ino)
     
  
