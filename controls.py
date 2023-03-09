@@ -23,9 +23,10 @@ def events(screen, gun, bullets):
             elif event.key == pygame.K_LEFT: #лево
                 gun.mleft = False
     
-def update(bg_color, screen, gun, inos, bullets):
+def update(bg_color, screen, stats, sc,  gun, inos, bullets):
     """обновление экрана"""
     screen.fill(bg_color)
+    sc.show_score()
     for bullet in bullets.sprites():
         bullet.draw_bullet()
     gun.output()
@@ -33,7 +34,7 @@ def update(bg_color, screen, gun, inos, bullets):
     pygame.display.flip()
     
     
-def update_bullets(screen, inos, bullets):
+def update_bullets(screen, stats, sc, inos, bullets):
     """обновляем позиции пулек"""
     bullets.update()
     for bullet in bullets.copy():
@@ -41,37 +42,47 @@ def update_bullets(screen, inos, bullets):
             bullets.remove(bullet)
     # print(len(bullets)) #проверяем что улетевщие за предел экрана пульки не жрут память
     collisions = pygame.sprite.groupcollide(bullets, inos, True, True)
+    if collisions:
+        for inos in collisions.values():
+            stats.score += 1 * len(inos) 
+        sc.image_score()
+        check_high_score(stats, sc)
+        sc.image_guns
     if len(inos) == 0:
         bullets.empty()
         create_army(screen, inos)
-        
+    
         
     
-
-def gun_kill(stats, screen, gun, inos, bullets):
+def gun_kill(stats, screen, sc, gun, inos, bullets):
     """пушка разбита"""
-    stats.gun_left -= 1
-    inos.empty()
-    bullets.empty()
-    create_army(screen, inos)
-    gun.create_gun()
-    time.sleep(1)
+    if stats.gun_left > 0:
+        stats.gun_left -= 1
+        sc.image_guns()
+        inos.empty()
+        bullets.empty()
+        create_army(screen, inos)
+        gun.create_gun()
+        time.sleep(1)
+    else:
+        stats.run_game = False
+        sys.exit()
+        
 
-
-def update_inos(stats, screen, gun, inos, bullets):
+def update_inos(stats, screen, sc, gun, inos, bullets):
     """обновление позицию пришельцев"""
     inos.update()
     if pygame.sprite.spritecollideany(gun, inos):
-        gun_kill(stats, screen, gun, inos, bullets)
-    inos_check(stats, screen, gun,inos, bullets)
+        gun_kill(stats, screen, sc, gun, inos, bullets)
+    inos_check(stats, screen, sc, gun,inos, bullets)
 
 
-def inos_check (stats, screen, gun,inos, bullets):
+def inos_check (stats, screen, sc, gun,inos, bullets):
     """проверка добралась ли армия до края экрана"""
     screen_rect = screen.get_rect()
     for ino in inos.sprites():
         if ino.rect.bottom >= screen_rect.bottom:
-            gun_kill(stats, screen, gun,inos, bullets)
+            gun_kill(stats, screen, sc, gun,inos, bullets)
             break
 
 def create_army(screen, inos):
@@ -89,8 +100,13 @@ def create_army(screen, inos):
             ino.y = ino_height + ino_height * row_number
             ino.rect.x = ino.x
             ino.rect.y = ino.rect.height + 1 *ino.rect.height * row_number
-            
-            
             inos.add(ino)
     
- 
+def check_high_score(stats, sc):
+     """проверяем появление нового рекорда"""
+     if stats.score > stats.hiscore:
+        stats.hiscore = stats.score
+        sc.image_high_score()
+        with open('hiscore.txt', 'w') as f:
+            f.write(str(stats.hiscore))
+        
